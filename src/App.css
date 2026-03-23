@@ -78,6 +78,73 @@ h1 {
   color: var(--text-muted);
 }
 
+.score-quip {
+  margin: 0 auto 1.1rem;
+  max-width: 26rem;
+  text-align: center;
+  font-size: 0.92rem;
+  font-style: italic;
+  color: rgba(232, 236, 241, 0.88);
+  line-height: 1.45;
+}
+
+.welcome-field {
+  margin-bottom: 1.1rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+.guess-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+}
+
+.guess-input::placeholder {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.guess-input:focus {
+  outline: none;
+  border-color: rgba(91, 159, 212, 0.55);
+  box-shadow: 0 0 0 2px rgba(91, 159, 212, 0.2);
+}
+
+.field-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.sound-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sound-row input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--accent);
+}
+
 .progress-wrap {
   margin-bottom: 1.25rem;
 }
@@ -209,17 +276,62 @@ h1 {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
+.result-earned-title {
+  font-size: clamp(1.35rem, 3.8vw, 1.65rem);
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+  line-height: 1.25;
+  color: #f4e4a0;
+  text-align: center;
+}
+
+.result-earned-sub {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  text-align: center;
+  line-height: 1.45;
+}
+
 .result-score {
   font-size: 3rem;
   font-weight: 700;
   color: var(--accent-strong);
-  margin: 0.5rem 0 0.25rem;
+  margin: 0 0 0.25rem;
   line-height: 1;
+  text-align: center;
 }
 
 .result-detail {
   color: var(--text-muted);
-  margin: 0 0 1.5rem;
+  margin: 0 0 1rem;
+  text-align: center;
+}
+
+.prediction-summary {
+  margin: 0 0 1.25rem;
+  padding: 0.85rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.prediction-hit {
+  color: var(--correct);
+  font-weight: 600;
+}
+
+.prediction-beat {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.prediction-miss {
+  color: var(--text-muted);
 }
 
 .footer-note {
