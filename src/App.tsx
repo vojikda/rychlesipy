@@ -1,5 +1,6 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { questions, type Question } from "./data/questions";
+import { getLevelInfo, grantRoundXp, loadTotalXp, type RoundXpResult } from "./playerLevel";
 import { getResultTitle, pickScoreQuip } from "./quizFlavor";
 import { playQuizSound } from "./quizSounds";
 import "./App.css";
@@ -37,6 +38,9 @@ export default function App() {
   const [guessInput, setGuessInput] = useState("");
   const [scorePrediction, setScorePrediction] = useState<number | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(readSoundPreference);
+  const [totalXpForUi, setTotalXpForUi] = useState(loadTotalXp);
+  const [lastRoundXp, setLastRoundXp] = useState<RoundXpResult | null>(null);
+  const roundXpGrantedRef = useRef(false);
 
   const poolSize = questions.length;
   const roundSize = Math.min(QUESTIONS_PER_ROUND, poolSize);
@@ -49,6 +53,13 @@ export default function App() {
 
   const scoreQuip = useMemo(() => pickScoreQuip(score), [score]);
   const resultTitle = useMemo(() => getResultTitle(score, total), [score, total]);
+  const playerLevel = useMemo(() => getLevelInfo(totalXpForUi), [totalXpForUi]);
+
+  useEffect(() => {
+    if (phase === "welcome") {
+      setTotalXpForUi(loadTotalXp());
+    }
+  }, [phase]);
 
   const goWelcome = useCallback(() => {
     setPhase("welcome");
@@ -59,9 +70,12 @@ export default function App() {
     setAnswered(false);
     setGuessInput("");
     setScorePrediction(null);
+    setLastRoundXp(null);
+    roundXpGrantedRef.current = false;
   }, []);
 
   const start = useCallback(() => {
+    roundXpGrantedRef.current = false;
     const raw = guessInput.trim();
     const n = parseInt(raw, 10);
     setScorePrediction(raw === "" || !Number.isFinite(n) ? null : n);
@@ -92,13 +106,19 @@ export default function App() {
 
   const next = useCallback(() => {
     if (index + 1 >= total) {
+      if (!roundXpGrantedRef.current) {
+        roundXpGrantedRef.current = true;
+        const reward = grantRoundXp(total, score);
+        setLastRoundXp(reward);
+        setTotalXpForUi(reward.totalXp);
+      }
       setPhase("result");
       return;
     }
     setIndex((i) => i + 1);
     setSelected(null);
     setAnswered(false);
-  }, [index, total]);
+  }, [index, total, score]);
 
   const setSoundOn = useCallback((on: boolean) => {
     setSoundEnabled(on);
@@ -144,10 +164,28 @@ export default function App() {
           <>
             <span className="badge">Kvíz</span>
             <h1>Vítej u kvízu</h1>
+            <div className="level-panel" aria-label={`Úroveň ${playerLevel.level}`}>
+              <div className="level-row">
+                <span className="level-badge">Úroveň {playerLevel.level}</span>
+                <span className="level-xp-meta">
+                  {playerLevel.xpInLevel} / {playerLevel.xpToNext} XP
+                </span>
+              </div>
+              <div
+                className="level-bar"
+                role="progressbar"
+                aria-valuenow={playerLevel.xpInLevel}
+                aria-valuemin={0}
+                aria-valuemax={playerLevel.xpToNext}
+              >
+                <div className="level-bar-fill" style={{ width: `${playerLevel.percentInLevel}%` }} />
+              </div>
+            </div>
             <p className="lead">
               V databázi je <strong>{poolSize}</strong> otázek; v jednom kole uvidíš <strong>{roundSize}</strong>{" "}
               náhodně vybraných. Začínáš na <strong>0 bodech</strong>: za správnou odpověď <strong>+1 bod</strong>, za
-              špatnou <strong>−1 bod</strong> (skóre může jít i do mínusu).
+              špatnou <strong>−1 bod</strong> (skóre může jít i do mínusu). Po kole dostaneš <strong>XP</strong> a můžeš
+              postupovat na vyšší <strong>úroveň</strong> (ukládá se v tomto prohlížeči).
             </p>
             <div className="welcome-field">
               <label className="field-label" htmlFor="guess-score">
@@ -190,6 +228,9 @@ export default function App() {
             </div>
             <p className="score-quip" aria-live="polite">
               {scoreQuip}
+            </p>
+            <p className="quiz-level-hint">
+              Tvá úroveň: <strong>{playerLevel.level}</strong>
             </p>
             <div className="progress-wrap">
               <div className="progress-label">
@@ -263,6 +304,17 @@ export default function App() {
                 <br />
                 {predictionHint}
               </p>
+            )}
+            {lastRoundXp && (
+              <div className="xp-reward">
+                <p className="xp-reward-main">+{lastRoundXp.xpGained} XP za toto kolo</p>
+                {lastRoundXp.leveledUp && (
+                  <p className="level-up-flash">Nová úroveň: {lastRoundXp.levelAfter}!</p>
+                )}
+                <p className="xp-reward-meta">
+                  Celkem {lastRoundXp.totalXp} XP · úroveň {lastRoundXp.levelAfter}
+                </p>
+              </div>
             )}
             <div className="actions">
               <button type="button" className="btn btn-primary" onClick={goWelcome}>
