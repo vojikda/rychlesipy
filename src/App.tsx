@@ -1,24 +1,40 @@
 import { useCallback, useMemo, useState } from "react";
-import { questions } from "./data/questions";
+import { questions, type Question } from "./data/questions";
 import "./App.css";
 
 type Phase = "welcome" | "quiz" | "result";
 
+const QUESTIONS_PER_ROUND = 20;
+
+/** Náhodně zamíchá a vrátí nejvýše `count` otázek. */
+function pickRoundQuestions(all: Question[], count: number): Question[] {
+  const copy = [...all];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy.slice(0, Math.min(count, copy.length));
+}
+
 export default function App() {
   const [phase, setPhase] = useState<Phase>("welcome");
+  const [roundQuestions, setRoundQuestions] = useState<Question[]>([]);
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
 
-  const total = questions.length;
-  const current = questions[index];
+  const poolSize = questions.length;
+  const roundSize = Math.min(QUESTIONS_PER_ROUND, poolSize);
+  const total = roundQuestions.length;
+  const current = roundQuestions[index];
   const progress = useMemo(
     () => (total ? ((index + (answered ? 1 : 0)) / total) * 100 : 0),
     [index, answered, total]
   );
 
   const start = useCallback(() => {
+    setRoundQuestions(pickRoundQuestions(questions, QUESTIONS_PER_ROUND));
     setPhase("quiz");
     setIndex(0);
     setScore(0);
@@ -50,7 +66,7 @@ export default function App() {
     setAnswered(false);
   }, [index, total]);
 
-  if (total === 0) {
+  if (poolSize === 0) {
     return (
       <div className="app">
         <div className="card">
@@ -75,8 +91,9 @@ export default function App() {
             <span className="badge">Kvíz</span>
             <h1>Vítej u kvízu</h1>
             <p className="lead">
-              Čeká tě {total} otázek se čtyřmi odpověďmi. Začínáš na <strong>0 bodech</strong>: za správnou odpověď
-              dostaneš <strong>+1 bod</strong>, za špatnou <strong>−1 bod</strong> (skóre může jít i do mínusu).
+              V databázi je <strong>{poolSize}</strong> otázek; v jednom kole uvidíš <strong>{roundSize}</strong>{" "}
+              náhodně vybraných. Začínáš na <strong>0 bodech</strong>: za správnou odpověď <strong>+1 bod</strong>, za
+              špatnou <strong>−1 bod</strong> (skóre může jít i do mínusu).
             </p>
             <div className="actions">
               <button type="button" className="btn btn-primary" onClick={start}>
