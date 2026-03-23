@@ -275,10 +275,6 @@ export default function App() {
           </>
         )}
       </div>
-      <p className="footer-note">
-        Data: <code className="inline-code">src/data/otazky.tsv</code> · import:{" "}
-        <code className="inline-code">npm run import-quiz -- soubor.xlsx</code>
-      </p>
     </div>
   );
 }
